@@ -33,11 +33,12 @@ from datetime import datetime
 # ─── Config ───
 
 def load_env():
-    """Load .env from script dir, home config, or cwd."""
+    """Load .env from multiple locations (first found wins per key)."""
     env = {}
     for env_path in [
         Path(__file__).resolve().parent / ".env",
         Path.home() / ".claude" / "cloudflare-pub" / ".env",
+        Path.home() / "Documents" / "personal_ai" / ".env",
         Path.cwd() / ".env",
     ]:
         if env_path.exists():
@@ -305,6 +306,14 @@ def slugify(name):
 
 # ─── Deploy ───
 
+def ensure_project(project_name, env):
+    """Create CF Pages project if it doesn't exist yet."""
+    subprocess.run(
+        ["wrangler", "pages", "project", "create", project_name, "--production-branch", "main"],
+        capture_output=True, text=True, env=env, cwd="/tmp",
+    )
+
+
 def deploy(project_name, html_content):
     """Deploy HTML to Cloudflare Pages via wrangler. Returns deploy URL."""
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -313,6 +322,9 @@ def deploy(project_name, html_content):
         env = os.environ.copy()
         env["CLOUDFLARE_API_TOKEN"] = CF_API_TOKEN
         env["CLOUDFLARE_ACCOUNT_ID"] = CF_ACCOUNT_ID
+
+        # Auto-create project on first deploy
+        ensure_project(project_name, env)
 
         result = subprocess.run(
             ["wrangler", "pages", "deploy", tmpdir, "--project-name", project_name],
