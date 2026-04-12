@@ -1,0 +1,9 @@
+.env
+token.txt
+__pycache__/
+*.pyc
+.DS_Store
+*.log
+.vscode/
+.idea/
+node_modules/
