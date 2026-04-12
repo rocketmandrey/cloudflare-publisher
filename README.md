@@ -57,24 +57,33 @@ See [references/setup.md](skills/cloudflare-pub/references/setup.md) for the ful
 
 Just say in Claude Code:
 
+**English:**
+- "deploy to cloudflare"
+- "share this as a link"
+- "publish this report online"
+
+**Русский:**
 - «опубликуй на cloudflare»
 - «задеплой на pages»
 - «сделай публичную ссылку»
-- «deploy to cloudflare»
-- «share this as a link»
+
+**中文:**
+- "发布到Cloudflare"
+- "生成公开链接"
+- "把这个部署到网上"
 
 Claude will format the content and return a permanent link.
 
 ### Examples
 
-**Publish analysis results:**
+**EN — Publish analysis results:**
 > Analyze this CSV and publish the report to cloudflare
 
-**Publish a document:**
-> Publish report.docx to pages
+**RU — Опубликовать документ:**
+> Опубликуй report.docx на pages
 
-**Generate and publish:**
-> Create a landing page for product X and deploy to cloudflare
+**ZH — 生成并发布:**
+> 创建一个产品X的着陆页并部署到cloudflare
 
 ## Skill structure
 

@@ -1,6 +1,6 @@
 ---
 name: cloudflare-pub
-description: "Publish any content to Cloudflare Pages and return a permanent public URL. Use when user asks to publish, deploy, host, share online, make a public link, опубликовать, задеплоить, выложить на cloudflare, сделать публичную ссылку. Works with .docx, .md, .txt, .html files and generated content (reports, analyses, landing pages, tables). Even if the user just says 'share this as a link' or 'put this online' — use this skill. Do NOT use for DNS management, Cloudflare Workers, R2 storage, or domain configuration — only static page deploys."
+description: "Publish any content to Cloudflare Pages and return a permanent public URL. Use when user asks to publish, deploy, host, share online, make a public link / опубликовать, задеплоить, выложить на cloudflare, сделать публичную ссылку / 发布到Cloudflare, 部署页面, 生成公开链接, 分享到网上. Works with .docx, .md, .txt, .html and generated content. Even if the user says 'share this as a link', 'put this online', 'поделись ссылкой', '生成链接' — use this skill. Do NOT use for DNS, Workers, R2, or domain config — only static page deploys."
 license: MIT
 compatibility: "Requires wrangler CLI (npm i -g wrangler), Python 3.10+. python-docx only for .docx files."
 metadata:
@@ -78,7 +78,7 @@ Always give the user the **Permanent URL**.
 
 ## Examples
 
-### Example 1: Publish generated analysis
+### Example 1: Publish generated analysis (EN)
 User says: "Analyze this CSV and publish the results as a link"
 
 1. Generate the analysis as markdown
@@ -87,15 +87,15 @@ User says: "Analyze this CSV and publish the results as a link"
 
 Result: User gets `https://csv-analysis.pages.dev` with styled report
 
-### Example 2: Publish a .docx document
+### Example 2: Publish a .docx document (RU)
 User says: "Опубликуй report.docx на cloudflare"
 
 1. Run `python3 scripts/publish.py "report.docx" --name "report"`
 
 Result: Document converted to styled HTML and deployed
 
-### Example 3: Quick share generated content
-User says: "Share this as a link" (after generating content in conversation)
+### Example 3: Quick share generated content (ZH)
+User says: "把这个分析结果发布成链接" (after generating content in conversation)
 
 1. Take the content just generated
 2. Pipe via stdin: `echo "content" | python3 scripts/publish.py --stdin --name "shared-content"`
