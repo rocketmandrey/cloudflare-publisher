@@ -1,13 +1,8 @@
 # Cloudflare Publisher
 
-Claude Code skill for publishing content to [Cloudflare Pages](https://pages.cloudflare.com).
-One command — permanent public link.
+Turn any report, analysis, or document into a permanent public link in seconds — no manual hosting, no pastebins, no expiring URLs. Just say "publish this" in [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
 
-**What it does:**
-- Takes `.docx`, `.md`, `.txt`, `.html` or `stdin` as input
-- Converts to styled HTML page (light/dark theme, responsive tables)
-- Deploys to Cloudflare Pages via `wrangler`
-- Returns a permanent `https://<name>.pages.dev` link
+**How it works:** give Claude a `.docx`, `.md`, `.txt`, `.html` file or generated content — the skill converts it to a styled HTML page (light/dark theme, responsive tables) and deploys to Cloudflare Pages. You get back a permanent `https://<name>.pages.dev` link.
 
 **No external Python dependencies.** Single file, stdlib only (`python-docx` needed for `.docx`).
 

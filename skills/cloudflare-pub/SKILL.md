@@ -1,13 +1,29 @@
 ---
 name: cloudflare-pub
-description: "Publish any content to Cloudflare Pages and return a permanent public URL. Use this skill whenever the user asks to publish, deploy, host, share online, make a public link, опубликовать, задеплоить, выложить на cloudflare, сделать публичную ссылку. Works with reports, landing pages, docs, tables, analyses, or any generated content. Converts .docx/.md/.txt to styled HTML with light/dark theme. Even if the user just says 'share this as a link' or 'put this online' after generating content — this is the right skill. Result: permanent https://<name>.pages.dev link."
+description: "Publish any content to Cloudflare Pages and return a permanent public URL. Use when user asks to publish, deploy, host, share online, make a public link, опубликовать, задеплоить, выложить на cloudflare, сделать публичную ссылку. Works with .docx, .md, .txt, .html files and generated content (reports, analyses, landing pages, tables). Even if the user just says 'share this as a link' or 'put this online' — use this skill. Do NOT use for DNS management, Cloudflare Workers, R2 storage, or domain configuration — only static page deploys."
+license: MIT
+compatibility: "Requires wrangler CLI (npm i -g wrangler), Python 3.10+. python-docx only for .docx files."
+metadata:
+  author: rocketmandrey
+  version: 1.0.0
+  category: publishing
+  tags: [cloudflare, pages, deploy, hosting]
 ---
 
 # Cloudflare Publisher
 
 Publish content to Cloudflare Pages. Returns a permanent `https://<name>.pages.dev` link.
 
-## Prerequisites
+## Important
+
+- Always verify wrangler is installed before attempting deploy
+- Always give the user the **Permanent URL**, not the Deploy URL
+- NEVER print, log, or echo .env contents or credentials
+- If .docx fails with import error, check `python-docx` is installed before retrying
+
+## Instructions
+
+### Step 1: Verify prerequisites
 
 Before first deploy in a session, verify once:
 
@@ -16,13 +32,12 @@ command -v wrangler || echo "MISSING: run npm i -g wrangler"
 ```
 
 Credentials are loaded automatically from `.env` by the script. If deploy fails with auth error, tell the user:
-> Create a `.env` file with `CF_ACCOUNT_ID` and `CF_API_TOKEN` next to the script or in `~/.claude/cloudflare-pub/.env`. See `references/setup.md` for step-by-step guide.
 
-**NEVER print, log, or echo credentials.**
+> Create a `.env` file with `CF_ACCOUNT_ID` and `CF_API_TOKEN` next to the script or in `~/.claude/cloudflare-pub/.env`.
 
-## Workflow
+Consult `references/setup.md` for step-by-step token creation guide with required scopes.
 
-### 1. Prepare content
+### Step 2: Prepare content
 
 | User situation | Action |
 |----------------|--------|
@@ -30,7 +45,7 @@ Credentials are loaded automatically from `.env` by the script. If deploy fails 
 | Asked to publish generated content | Write to temp file first, then pass path |
 | Has raw HTML/text ready | Pipe via `--stdin` |
 
-### 2. Choose project name
+### Step 3: Choose project name
 
 Name becomes the subdomain (`https://<name>.pages.dev`):
 - Lowercase a-z, digits, hyphens only (max 63 chars)
@@ -38,25 +53,22 @@ Name becomes the subdomain (`https://<name>.pages.dev`):
 - Cyrillic auto-transliterated by the script
 - Only ask user if truly ambiguous
 
-### 3. Deploy
+### Step 4: Deploy
 
 ```bash
-# The script lives in this skill's scripts/ directory
-SCRIPT="$(dirname "$(readlink -f "$0")")/scripts/publish.py"
-
 # From file
-python3 "$SCRIPT" "report.md" --name "weekly-report" --title "Weekly Report"
+python3 scripts/publish.py "report.md" --name "weekly-report" --title "Weekly Report"
 
 # From stdin (generated content)
-echo "<content>" | python3 "$SCRIPT" --stdin --name "my-page" --title "Title"
+echo "content" | python3 scripts/publish.py --stdin --name "my-page" --title "Title"
 
 # Dry run — generate HTML without deploying
-python3 "$SCRIPT" "file.docx" --html-only
+python3 scripts/publish.py "file.docx" --html-only
 ```
 
-The script auto-creates the Cloudflare Pages project on first deploy.
+The `scripts/publish.py` is located in this skill's directory. The script auto-creates the Cloudflare Pages project on first deploy.
 
-### 4. Return result
+### Step 5: Return result
 
 The script prints two URLs:
 - **Deploy URL** (`https://<hash>.<name>.pages.dev`) — immutable snapshot
@@ -64,7 +76,33 @@ The script prints two URLs:
 
 Always give the user the **Permanent URL**.
 
-## Quick CLI reference
+## Examples
+
+### Example 1: Publish generated analysis
+User says: "Analyze this CSV and publish the results as a link"
+
+1. Generate the analysis as markdown
+2. Write to temp file `/tmp/analysis.md`
+3. Run `python3 scripts/publish.py /tmp/analysis.md --name "csv-analysis" --title "CSV Analysis"`
+
+Result: User gets `https://csv-analysis.pages.dev` with styled report
+
+### Example 2: Publish a .docx document
+User says: "Опубликуй report.docx на cloudflare"
+
+1. Run `python3 scripts/publish.py "report.docx" --name "report"`
+
+Result: Document converted to styled HTML and deployed
+
+### Example 3: Quick share generated content
+User says: "Share this as a link" (after generating content in conversation)
+
+1. Take the content just generated
+2. Pipe via stdin: `echo "content" | python3 scripts/publish.py --stdin --name "shared-content"`
+
+Result: Instant shareable permanent link
+
+## CLI Reference
 
 | Flag | Purpose |
 |------|---------|
@@ -74,7 +112,7 @@ Always give the user the **Permanent URL**.
 | `--title` | HTML page title |
 | `--html-only` | Generate HTML locally, skip deploy |
 
-## Supported formats
+## Supported Formats
 
 | Format | Handling |
 |--------|---------|
@@ -83,9 +121,14 @@ Always give the user the **Permanent URL**.
 | `.html` | Deployed as-is |
 | `stdin` | Auto-detects HTML vs text |
 
-## When NOT to use
+## Common Issues
 
-DNS management, Workers scripts, R2/KV storage, editing deployed sites, domain configuration. This skill only does static Pages deploys.
+- `wrangler: command not found` → Run `npm i -g wrangler`
+- Auth error `[code: 10000]` → Check `.env` has valid `CF_ACCOUNT_ID` and `CF_API_TOKEN`. Consult `references/setup.md`
+- 404 after first deploy → DNS propagation takes ~30s on new projects, wait and retry
+- Project name invalid → Uppercase or non-ASCII in `--name`; omit flag to auto-transliterate
+
+Consult `references/troubleshooting.md` for the full troubleshooting guide.
 
 ## References
 
