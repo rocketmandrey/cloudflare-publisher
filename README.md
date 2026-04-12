@@ -1,5 +1,7 @@
 # Cloudflare Publisher
 
+[Russian / Русский](docs/README_RU.md) | [Chinese / 中文](docs/README_ZH.md)
+
 Turn any report, analysis, or document into a permanent public link in seconds — no manual hosting, no pastebins, no expiring URLs. Just say "publish this" in [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
 
 **How it works:** give Claude a `.docx`, `.md`, `.txt`, `.html` file or generated content — the skill converts it to a styled HTML page (light/dark theme, responsive tables) and deploys to Cloudflare Pages. You get back a permanent `https://<name>.pages.dev` link.
