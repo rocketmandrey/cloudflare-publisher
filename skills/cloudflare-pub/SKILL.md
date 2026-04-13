@@ -57,7 +57,7 @@ Name becomes the subdomain (`https://<name>.pages.dev`):
 
 ```bash
 # From file
-python3 scripts/publish.py "report.md" --name "weekly-report" --title "Weekly Report"
+python3 scripts/publish.py "report.md" --name "weekly-report" --title "Weekly Report" --favicon "📊"
 
 # From stdin (generated content)
 echo "content" | python3 scripts/publish.py --stdin --name "my-page" --title "Title"
@@ -110,6 +110,7 @@ Result: Instant shareable permanent link
 | `--stdin` | Read from stdin instead of file |
 | `--name` | Project slug → subdomain |
 | `--title` | HTML page title |
+| `--favicon` | Emoji for browser tab favicon (e.g. `🎨`) |
 | `--html-only` | Generate HTML locally, skip deploy |
 
 ## Supported Formats

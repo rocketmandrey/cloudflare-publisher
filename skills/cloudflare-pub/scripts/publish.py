@@ -165,7 +165,16 @@ def linkify(text):
     return re.sub(r'(https?://[^\s<>\"]+)', r'<a href="\1" target="_blank">\1</a>', text)
 
 
-def render_html(blocks, title=None):
+def favicon_tag(emoji):
+    """Generate inline SVG favicon from emoji."""
+    if not emoji:
+        return ""
+    return (f'<link rel="icon" href="data:image/svg+xml,'
+            f"<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27>"
+            f"<text y=%27.9em%27 font-size=%2790%27>{emoji}</text></svg>\">")
+
+
+def render_html(blocks, title=None, favicon=None):
     """Render structured blocks → full HTML page with styles."""
     if not title:
         for btype, content in blocks:
@@ -226,6 +235,7 @@ def render_html(blocks, title=None):
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{esc(title)}</title>
+{favicon_tag(favicon)}
 <style>
 :root {{
   --bg:#fff; --text:#1a1a2e; --muted:#6b7280;
@@ -360,6 +370,7 @@ def main():
     parser.add_argument("--stdin", action="store_true", help="Read content from stdin")
     parser.add_argument("--name", help="Project name for URL (auto from filename if omitted)")
     parser.add_argument("--title", help="Page title (auto from content if omitted)")
+    parser.add_argument("--favicon", help="Emoji for browser tab favicon (e.g. 🎨)")
     parser.add_argument("--html-only", action="store_true", help="Save HTML locally, don't deploy")
     args = parser.parse_args()
 
@@ -373,9 +384,11 @@ def main():
         is_html = raw.strip().lower().startswith(("<!doctype", "<html"))
         if is_html:
             html = raw
+            if args.favicon and "<head>" in html:
+                html = html.replace("<head>", f"<head>\n{favicon_tag(args.favicon)}", 1)
         else:
             blocks = parse_text(raw)
-            html = render_html(blocks, title=args.title)
+            html = render_html(blocks, title=args.title, favicon=args.favicon)
         project_name = slugify(args.name or f"page-{datetime.now().strftime('%Y%m%d-%H%M')}")
     else:
         filepath = Path(args.file)
@@ -390,6 +403,8 @@ def main():
 
         if ext in (".html", ".htm"):
             html = filepath.read_text(encoding="utf-8")
+            if args.favicon and "<head>" in html:
+                html = html.replace("<head>", f"<head>\n{favicon_tag(args.favicon)}", 1)
             print("  HTML — deploy as-is")
         else:
             if ext == ".docx":
@@ -399,7 +414,7 @@ def main():
                 blocks = parse_text(text)
 
             print(f"  {len(blocks)} blocks")
-            html = render_html(blocks, title=args.title)
+            html = render_html(blocks, title=args.title, favicon=args.favicon)
 
     # ── Output ──
     if args.html_only:
