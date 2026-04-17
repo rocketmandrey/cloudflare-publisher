@@ -2,12 +2,12 @@
 name: cloudflare-pub
 description: "Publish any content to Cloudflare Pages and return a permanent public URL. Use when user asks to publish, deploy, host, share online, make a public link / опубликовать, задеплоить, выложить на cloudflare, сделать публичную ссылку / 发布到Cloudflare, 部署页面, 生成公开链接, 分享到网上. Works with .docx, .md, .txt, .html and generated content. Even if the user says 'share this as a link', 'put this online', 'поделись ссылкой', '生成链接' — use this skill. Do NOT use for DNS, Workers, R2, or domain config — only static page deploys."
 license: MIT
-compatibility: "Requires wrangler CLI (npm i -g wrangler), Python 3.10+. python-docx only for .docx files."
+compatibility: "Requires wrangler CLI (npm i -g wrangler), Python 3.10+. python-docx only for .docx files. pandoc recommended for markdown — enables the editorial theme (Fraunces + Inter, cream palette); falls back to the legacy blue theme automatically when pandoc is absent."
 metadata:
   author: rocketmandrey
-  version: 1.0.0
+  version: 1.1.0
   category: publishing
-  tags: [cloudflare, pages, deploy, hosting]
+  tags: [cloudflare, pages, deploy, hosting, typography]
 ---
 
 # Cloudflare Publisher
@@ -29,7 +29,10 @@ Before first deploy in a session, verify once:
 
 ```bash
 command -v wrangler || echo "MISSING: run npm i -g wrangler"
+command -v pandoc   || echo "OPTIONAL: brew install pandoc (or apt/choco install pandoc) for the editorial theme"
 ```
+
+`pandoc` is optional — without it the script silently falls back to the legacy renderer.
 
 Credentials are loaded automatically from `.env` by the script. If deploy fails with auth error, tell the user:
 
@@ -111,16 +114,23 @@ Result: Instant shareable permanent link
 | `--name` | Project slug → subdomain |
 | `--title` | HTML page title |
 | `--favicon` | Emoji for browser tab favicon (e.g. `🎨`) |
+| `--legacy` | Force legacy renderer / blue theme instead of editorial pandoc theme |
 | `--html-only` | Generate HTML locally, skip deploy |
+
+## Themes
+
+**Editorial (default for markdown when pandoc is present).** Fraunces + Inter, cream `#f6f2ea` / terracotta `#c8502a` palette, accent dot before each `h2`, yellow highlight under `<strong>`, arrow `→` bullets, editorial tables, callout blockquotes. Produced via `pandoc` + `scripts/pretty_template.html` + `scripts/pretty.css`. Supports the full GFM subset — lists, tables, links, blockquotes, inline code, fenced code.
+
+**Legacy (fallback / `--legacy`).** Hand-rolled renderer, plain blue theme, light/dark automatic. Runs with Python stdlib only — no pandoc required. Triggered when pandoc is missing or when `--legacy` is set. `.docx` always uses this renderer (it goes through `python-docx`).
 
 ## Supported Formats
 
-| Format | Handling |
-|--------|---------|
-| `.docx` | Headings, paragraphs, tables → styled HTML (requires `python-docx`) |
-| `.md` / `.txt` | Markdown headings, tab-tables → styled HTML |
-| `.html` | Deployed as-is |
-| `stdin` | Auto-detects HTML vs text |
+| Format | Theme | Handling |
+|--------|-------|----------|
+| `.md` / `.txt` | Editorial if pandoc present, else legacy | Full GFM (editorial) / heading+paragraph+tab-table (legacy) |
+| `.docx` | Legacy | Headings, paragraphs, tables via `python-docx` |
+| `.html` | — | Deployed as-is |
+| `stdin` | Editorial for text if pandoc present | Auto-detects HTML vs text |
 
 ## Common Issues
 

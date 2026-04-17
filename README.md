@@ -4,9 +4,12 @@
 
 Turn any report, analysis, or document into a permanent public link in seconds — no manual hosting, no pastebins, no expiring URLs. Just say "publish this" in [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
 
-**How it works:** give Claude a `.docx`, `.md`, `.txt`, `.html` file or generated content — the skill converts it to a styled HTML page (light/dark theme, responsive tables) and deploys to Cloudflare Pages. You get back a permanent `https://<name>.pages.dev` link.
+**How it works:** give Claude a `.docx`, `.md`, `.txt`, `.html` file or generated content — the skill converts it to a styled HTML page and deploys to Cloudflare Pages. You get back a permanent `https://<name>.pages.dev` link.
 
-**No external Python dependencies.** Single file, stdlib only (`python-docx` needed for `.docx`).
+**Two themes, picked automatically:**
+
+- **Editorial (default for markdown when `pandoc` is installed)** — Fraunces + Inter, warm cream palette with terracotta accents, magazine-style typography, arrow bullets, yellow-highlighted bolds. Full GFM support (lists, tables, links, blockquotes, code).
+- **Legacy (fallback)** — hand-rolled renderer, clean blue theme with light/dark auto-switch. No external dependencies beyond `python-docx` for `.docx`. Kicks in when `pandoc` is missing or `--legacy` is passed. `.docx` always uses this theme.
 
 ## Installation
 
@@ -52,6 +55,7 @@ EOF
 ```
 
 4. Install wrangler: `npm i -g wrangler`
+5. *(Recommended for the editorial theme)* install pandoc: `brew install pandoc` · `apt install pandoc` · `choco install pandoc`. Skip if you prefer the legacy blue theme.
 
 See [references/setup.md](skills/cloudflare-pub/references/setup.md) for the full step-by-step guide.
 
@@ -92,8 +96,10 @@ Claude will format the content and return a permanent link.
 ```
 skills/cloudflare-pub/
 ├── SKILL.md                    ← Skill definition (triggers, workflow)
-├─��� scripts/
-│   └── publish.py              ← Main script (parse → render → deploy)
+├── scripts/
+│   ├── publish.py              ← Main script (parse → render → deploy)
+│   ├── pretty.css              ← Editorial theme stylesheet
+│   └── pretty_template.html    ← Editorial theme pandoc template
 └── references/
     ├── setup.md                ← Cloudflare account & token setup
     ├── html-features.md        ← Generated HTML styling details
@@ -102,13 +108,24 @@ skills/cloudflare-pub/
 
 ## Supported formats
 
-| Format | Handling |
-|--------|---------|
-| `.docx` | Parses headings, paragraphs, tables → styled HTML |
-| `.md` | Markdown headings + tables → styled HTML |
-| `.txt` | Plain text, tab-tables → styled HTML |
-| `.html` | Deployed as-is |
-| `stdin` | Auto-detects HTML vs text |
+| Format | Theme | Handling |
+|--------|-------|----------|
+| `.md` / `.txt` | Editorial if pandoc installed, else legacy | Full GFM (editorial) / heading+paragraph+tab-table (legacy) |
+| `.docx` | Legacy | Headings, paragraphs, tables via `python-docx` |
+| `.html` | — | Deployed as-is |
+| `stdin` | Editorial for text if pandoc installed | Auto-detects HTML vs text |
+
+## Flags
+
+| Flag | Purpose |
+|------|---------|
+| `<file>` | Input file (.docx .md .txt .html) |
+| `--stdin` | Read from stdin |
+| `--name` | Project slug → subdomain |
+| `--title` | Page `<title>` |
+| `--favicon` | Emoji favicon, default `📄` |
+| `--legacy` | Force the legacy renderer and blue theme |
+| `--html-only` | Save HTML locally, skip deploy |
 
 ## Limits (Cloudflare Free)
 

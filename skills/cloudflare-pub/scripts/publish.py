@@ -23,11 +23,17 @@ import sys
 import os
 import re
 import json
+import shutil
 import subprocess
 import tempfile
 import argparse
 from pathlib import Path
 from datetime import datetime
+
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+PRETTY_CSS = SCRIPT_DIR / "pretty.css"
+PRETTY_TEMPLATE = SCRIPT_DIR / "pretty_template.html"
 
 
 # ─── Config ───
@@ -163,6 +169,63 @@ def esc(text):
 def linkify(text):
     """Convert URLs to clickable links."""
     return re.sub(r'(https?://[^\s<>\"]+)', r'<a href="\1" target="_blank">\1</a>', text)
+
+
+# ─── Pretty renderer (pandoc + editorial template) ───
+
+def has_pandoc():
+    """Check if pandoc is available on PATH."""
+    return shutil.which("pandoc") is not None
+
+
+def render_pretty(md_source, title=None, favicon=None, source_is_path=True):
+    """Render markdown → editorial HTML via pandoc + pretty template.
+
+    md_source: file path if source_is_path=True, else raw markdown string.
+    Returns the HTML string, or None if pandoc/assets are unavailable.
+    """
+    if not has_pandoc() or not PRETTY_CSS.exists() or not PRETTY_TEMPLATE.exists():
+        return None
+
+    title = title or "Report"
+    favicon = favicon or "📄"
+
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".html", delete=False, encoding="utf-8"
+    ) as hdr:
+        hdr.write("<style>\n")
+        hdr.write(PRETTY_CSS.read_text(encoding="utf-8"))
+        hdr.write("\n</style>\n")
+        hdr_path = hdr.name
+
+    try:
+        cmd = [
+            "pandoc",
+            "-f", "gfm",
+            "-t", "html",
+            "--standalone",
+            "--template", str(PRETTY_TEMPLATE),
+            "--metadata", f"title={title}",
+            "--metadata", "lang=ru",
+            "--metadata", f"favicon={favicon}",
+            "--include-in-header", hdr_path,
+        ]
+        if source_is_path:
+            cmd.append(str(md_source))
+            result = subprocess.run(cmd, capture_output=True, text=True)
+        else:
+            result = subprocess.run(
+                cmd, input=md_source, capture_output=True, text=True
+            )
+        if result.returncode != 0:
+            print(f"pandoc failed: {result.stderr}", file=sys.stderr)
+            return None
+        return result.stdout
+    finally:
+        try:
+            os.unlink(hdr_path)
+        except OSError:
+            pass
 
 
 def favicon_tag(emoji):
@@ -371,12 +434,17 @@ def main():
     parser.add_argument("--name", help="Project name for URL (auto from filename if omitted)")
     parser.add_argument("--title", help="Page title (auto from content if omitted)")
     parser.add_argument("--favicon", help="Emoji for browser tab favicon (e.g. 🎨)")
+    parser.add_argument("--legacy", action="store_true",
+                        help="Force the legacy hand-rolled renderer (blue theme) "
+                             "instead of the editorial pandoc theme")
     parser.add_argument("--html-only", action="store_true", help="Save HTML locally, don't deploy")
     args = parser.parse_args()
 
     if not args.file and not args.stdin:
         parser.print_help()
         sys.exit(1)
+
+    use_pretty = not args.legacy and has_pandoc()
 
     # ── Read input ──
     if args.stdin:
@@ -386,6 +454,14 @@ def main():
             html = raw
             if args.favicon and "<head>" in html:
                 html = html.replace("<head>", f"<head>\n{favicon_tag(args.favicon)}", 1)
+        elif use_pretty:
+            html = render_pretty(raw, title=args.title, favicon=args.favicon,
+                                 source_is_path=False)
+            if html is None:
+                blocks = parse_text(raw)
+                html = render_html(blocks, title=args.title, favicon=args.favicon)
+            else:
+                print("  editorial theme (pandoc)")
         else:
             blocks = parse_text(raw)
             html = render_html(blocks, title=args.title, favicon=args.favicon)
@@ -406,6 +482,16 @@ def main():
             if args.favicon and "<head>" in html:
                 html = html.replace("<head>", f"<head>\n{favicon_tag(args.favicon)}", 1)
             print("  HTML — deploy as-is")
+        elif ext in (".md", ".txt") and use_pretty:
+            title = args.title or filepath.stem.replace("_", " ").replace("-", " ").title()
+            html = render_pretty(filepath, title=title, favicon=args.favicon)
+            if html is None:
+                text = filepath.read_text(encoding="utf-8")
+                blocks = parse_text(text)
+                print(f"  {len(blocks)} blocks (legacy fallback)")
+                html = render_html(blocks, title=args.title, favicon=args.favicon)
+            else:
+                print("  editorial theme (pandoc)")
         else:
             if ext == ".docx":
                 blocks = parse_docx(filepath)

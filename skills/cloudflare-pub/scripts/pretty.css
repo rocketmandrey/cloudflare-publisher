@@ -1,0 +1,279 @@
+/* Editorial/longread стиль — Fraunces + Inter, кремовая палитра с терракотой.
+   Адаптирован из callcenter-about.pages.dev под pandoc-output (h1/h2/h3/p/ul/ol/table/blockquote/hr/code/a). */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg:#f6f2ea;
+  --paper:#fffdf8;
+  --ink:#181613;
+  --muted:#6e6760;
+  --rule:#e7e0d2;
+  --accent:#c8502a;
+  --accent-soft:#f4dcc8;
+  --highlight:#fff3b0;
+  --code-bg:#efe7d5;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  line-height:1.65;
+  font-size:17px;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* Main container — pandoc's --standalone wraps content in <body> directly. */
+body > h1, body > h2, body > h3, body > h4, body > p, body > ul, body > ol,
+body > blockquote, body > table, body > hr, body > pre, body > figure,
+body > section, body > div, body > header {
+  max-width:780px;
+  margin-left:auto;
+  margin-right:auto;
+  padding-left:28px;
+  padding-right:28px;
+}
+body{padding:48px 0 96px}
+
+/* Title (pandoc h1.title) — hero heading */
+h1.title{
+  font-family:'Fraunces',Georgia,serif;
+  font-weight:500;
+  font-size:clamp(36px,5.5vw,56px);
+  line-height:1.06;
+  letter-spacing:-0.02em;
+  margin-bottom:16px;
+  padding-bottom:28px;
+  border-bottom:1px solid var(--rule);
+  max-width:780px;
+}
+h1.title em, h1.title i{
+  font-style:italic;
+  color:var(--accent);
+  font-weight:500;
+}
+
+/* Document H1 (if present without .title) — same as title but slightly smaller */
+h1{
+  font-family:'Fraunces',Georgia,serif;
+  font-weight:500;
+  font-size:clamp(32px,4.5vw,44px);
+  line-height:1.1;
+  letter-spacing:-0.015em;
+  margin:48px 0 20px;
+}
+h1 em, h1 i{font-style:italic;color:var(--accent);font-weight:500}
+
+/* Section H2 with accent dot */
+h2{
+  font-family:'Fraunces',Georgia,serif;
+  font-weight:500;
+  font-size:clamp(24px,3vw,32px);
+  line-height:1.2;
+  letter-spacing:-0.01em;
+  margin:56px 0 18px;
+  position:relative;
+  padding-left:22px;
+}
+h2::before{
+  content:"";
+  position:absolute;
+  left:0;top:0.5em;
+  width:8px;height:8px;
+  background:var(--accent);
+  border-radius:50%;
+}
+
+h3{
+  font-family:'Fraunces',Georgia,serif;
+  font-weight:600;
+  font-size:clamp(18px,2.2vw,22px);
+  line-height:1.25;
+  margin:32px 0 10px;
+  letter-spacing:-0.005em;
+}
+
+h4{
+  font-family:'Inter',sans-serif;
+  font-weight:600;
+  font-size:15px;
+  letter-spacing:.02em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin:24px 0 8px;
+}
+
+p{margin-bottom:16px;color:#2a2622}
+
+/* Highlight yellow marker under <strong> */
+p strong, li strong, td strong{
+  font-weight:600;
+  background:linear-gradient(180deg,transparent 62%,var(--highlight) 62%);
+  padding:0 2px;
+}
+
+em, i{font-style:italic}
+
+a{
+  color:var(--accent);
+  text-decoration:none;
+  border-bottom:1px solid var(--accent-soft);
+  transition:border-color .15s;
+}
+a:hover{border-bottom-color:var(--accent)}
+
+/* Lists with arrow marker */
+ul, ol{
+  margin:18px 0 22px;
+  padding-left:0;
+  list-style:none;
+}
+ul li, ol li{
+  position:relative;
+  padding-left:28px;
+  margin-bottom:8px;
+}
+ul > li::before{
+  content:"→";
+  position:absolute;
+  left:0;top:0;
+  color:var(--accent);
+  font-weight:600;
+}
+ol{counter-reset:li}
+ol > li{counter-increment:li}
+ol > li::before{
+  content:counter(li) ".";
+  position:absolute;
+  left:0;top:0;
+  color:var(--accent);
+  font-weight:600;
+  font-family:'Fraunces',serif;
+  font-size:16px;
+}
+li > ul, li > ol{margin:6px 0 4px}
+li > p{margin-bottom:4px}
+
+/* Blockquote — editorial callout */
+blockquote{
+  background:var(--paper);
+  border:1px solid var(--rule);
+  border-left:3px solid var(--accent);
+  padding:20px 26px;
+  border-radius:4px;
+  margin:24px auto;
+  box-shadow:0 1px 0 rgba(0,0,0,.02);
+  max-width:780px;
+}
+blockquote p:last-child{margin-bottom:0}
+blockquote p{color:var(--ink)}
+
+/* Horizontal rule — italic divider */
+hr{
+  border:0;
+  height:1px;
+  background:var(--rule);
+  margin:56px auto;
+  max-width:780px;
+  position:relative;
+}
+
+/* Code */
+code{
+  background:var(--code-bg);
+  padding:.1em .4em;
+  border-radius:4px;
+  font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,monospace;
+  font-size:.88em;
+}
+pre{
+  background:var(--paper);
+  border:1px solid var(--rule);
+  border-radius:6px;
+  padding:18px 20px;
+  overflow-x:auto;
+  margin:20px auto;
+  max-width:780px;
+  font-size:14px;
+  line-height:1.55;
+}
+pre code{
+  background:none;
+  padding:0;
+  font-size:inherit;
+}
+
+/* Tables */
+table{
+  width:calc(100% - 56px);
+  max-width:780px;
+  margin:28px auto;
+  border-collapse:separate;
+  border-spacing:0;
+  background:var(--paper);
+  border:1px solid var(--rule);
+  border-radius:8px;
+  overflow:hidden;
+  font-size:15px;
+}
+th{
+  font-family:'Fraunces',serif;
+  font-weight:600;
+  font-size:14px;
+  letter-spacing:.02em;
+  text-align:left;
+  padding:14px 16px;
+  background:var(--accent-soft);
+  color:var(--ink);
+  border-bottom:1px solid var(--rule);
+}
+td{
+  padding:12px 16px;
+  border-bottom:1px solid var(--rule);
+  vertical-align:top;
+}
+tr:last-child td{border-bottom:none}
+tr:nth-child(even) td{background:rgba(239,231,213,0.25)}
+
+/* Images */
+img{
+  max-width:100%;
+  height:auto;
+  display:block;
+  margin:24px auto;
+  border-radius:6px;
+}
+
+figure{
+  margin:32px auto;
+  max-width:780px;
+  background:var(--paper);
+  border:1px solid var(--rule);
+  border-radius:8px;
+  overflow:hidden;
+}
+figure img{margin:0;border-radius:0;width:100%}
+figcaption{
+  padding:14px 20px;
+  font-size:13px;
+  color:var(--muted);
+  border-top:1px solid var(--rule);
+  font-style:italic;
+}
+
+/* Mobile */
+@media (max-width:600px){
+  body{font-size:16px;padding:32px 0 64px}
+  body > h1, body > h2, body > h3, body > h4, body > p, body > ul, body > ol,
+  body > blockquote, body > table, body > hr, body > pre, body > figure{
+    padding-left:20px;padding-right:20px;
+  }
+  h1.title{font-size:30px}
+  h2{font-size:24px;margin:40px 0 14px}
+  table{width:calc(100% - 40px);font-size:14px}
+  th,td{padding:10px 12px}
+  blockquote{padding:18px 20px}
+}

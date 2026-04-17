@@ -4,9 +4,12 @@
 
 将任何报告、分析或文档在几秒钟内转化为永久公开链接 — 无需手动托管、无需粘贴板、无需过期URL。只需在 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) 中说「发布这个」。
 
-**工作原理：** 将 `.docx`、`.md`、`.txt`、`.html` 文件或生成的内容交给 Claude — 技能会将其转换为精美的 HTML 页面（明暗主题、响应式表格），并部署到 Cloudflare Pages。您将获得永久链接 `https://<name>.pages.dev`。
+**工作原理：** 将 `.docx`、`.md`、`.txt`、`.html` 文件或生成的内容交给 Claude — 技能会将其转换为精美的 HTML 页面，并部署到 Cloudflare Pages。您将获得永久链接 `https://<name>.pages.dev`。
 
-**无外部 Python 依赖。** 单文件，仅使用标准库（`.docx` 需要 `python-docx`）。
+**两种主题，自动选择：**
+
+- **Editorial（Markdown 默认主题，需安装 `pandoc`）** — Fraunces + Inter 字体，温暖的奶油色调配赤陶色强调色，杂志排版，箭头项目符号，粗体带黄色荧光底纹。完整支持 GFM（列表、表格、链接、引用、代码）。
+- **Legacy（后备方案）** — 内置渲染器，简洁的蓝色主题，明暗自动切换。除 `.docx` 需要的 `python-docx` 外无其他依赖。当 `pandoc` 缺失或传入 `--legacy` 时启用。`.docx` 始终使用此主题。
 
 ## 安装
 
@@ -52,6 +55,7 @@ EOF
 ```
 
 4. 安装 wrangler：`npm i -g wrangler`
+5. *（Editorial 主题推荐）* 安装 pandoc：`brew install pandoc` · `apt install pandoc` · `choco install pandoc`。如果您偏好 Legacy 蓝色主题可跳过此步。
 
 详细指南：[references/setup.md](../skills/cloudflare-pub/references/setup.md)
 
@@ -81,7 +85,9 @@ EOF
 skills/cloudflare-pub/
 ├── SKILL.md                    ← 技能定义（触发器、工作流）
 ├── scripts/
-│   └── publish.py              ← 主脚本（解析 → 渲染 → 部署）
+│   ├── publish.py              ← 主脚本（解析 → 渲染 → 部署）
+│   ├── pretty.css              ← Editorial 主题样式
+│   └── pretty_template.html    ← Editorial 主题 pandoc 模板
 └── references/
     ├── setup.md                ← Cloudflare 账户和令牌设置
     ├── html-features.md        ← 生成的 HTML 样式详情
@@ -90,13 +96,24 @@ skills/cloudflare-pub/
 
 ## 支持的格式
 
-| 格式 | 处理方式 |
-|------|---------|
-| `.docx` | 解析标题、段落、表格 → 精美 HTML |
-| `.md` | Markdown 标题 + 表格 → 精美 HTML |
-| `.txt` | 纯文本、制表符表格 → 精美 HTML |
-| `.html` | 直接部署 |
-| `stdin` | 自动检测 HTML 或文本 |
+| 格式 | 主题 | 处理方式 |
+|------|------|---------|
+| `.md` / `.txt` | 有 pandoc 时 Editorial，否则 Legacy | 完整 GFM（Editorial）/ 标题+段落+制表符表格（Legacy） |
+| `.docx` | Legacy | 通过 `python-docx` 处理标题、段落、表格 |
+| `.html` | — | 直接部署 |
+| `stdin` | 有 pandoc 时文本走 Editorial | 自动检测 HTML 或文本 |
+
+## 标志
+
+| 标志 | 用途 |
+|------|------|
+| `<file>` | 输入文件（.docx .md .txt .html） |
+| `--stdin` | 从 stdin 读取 |
+| `--name` | 项目 slug → 子域名 |
+| `--title` | 页面 `<title>` |
+| `--favicon` | 表情符号 favicon，默认 `📄` |
+| `--legacy` | 强制使用 Legacy 渲染器 / 蓝色主题 |
+| `--html-only` | 本地保存 HTML，不部署 |
 
 ## 限制（Cloudflare 免费版）
 
